@@ -33,6 +33,9 @@ public:
 	void EndPlayerTurn();    // 플레이어 턴 종료
 	void StartMonsterTurn(); // 몬스터 턴 시작
 	void EndMonsterTurn();   // 몬스터 턴 종료
+	// 좀비 한 마리가 이번 턴의 행동(공격/이동/이동 실패 포함)을 마쳤을 때 호출.
+	// 모든 좀비가 행동을 마치면 그때 한 번만 EndMonsterTurn()을 실행한다.
+	void NotifyZombieActed();
 	UFUNCTION(BlueprintCallable)
 	void SpawnMonsters(int32 MonsterCount);//몬스터 스폰하기
 	FVector GetRandomSpawnLocation(float MinX, float MaxX, float MinY, float MaxY, bool bFixedX);
@@ -60,4 +63,7 @@ private:
 	FTimerHandle MonsterTurnTimerHandle;  // 몬스터 턴 타이머 핸들
 	FTimerHandle PlayerTurnTimerHandle;  // 플레이어 턴 타이머 핸들
 	FTimerHandle EndGameTimerHandle;  // 플레이어 턴 타이머 핸들
+
+	int32 ZombiesToActThisTurn = 0;  // 이번 몬스터 턴에 행동해야 하는 좀비 수
+	int32 ZombiesActedThisTurn = 0;  // 이번 몬스터 턴에 행동을 마친 좀비 수
 };

@@ -88,14 +88,24 @@ void AZombieAIController::Tick(float DeltaTime)
 
 void AZombieAIController::MoveTowardsPlayer()
 {
-	//이동애니메이션 실행	
+	if (!ZombiePawn || !PlayerPawn)
+	{
+		// 초기화가 아직 안 끝난 경우 등: 이번 턴은 행동 없이 완료 처리
+		if (GameMode)
+		{
+			GameMode->NotifyZombieActed();
+		}
+		return;
+	}
+
+	//이동애니메이션 실행
 	ZombiePawn->ZombieAnim->Anim_move=true;
-	
-	if (!ZombiePawn || !PlayerPawn) return;
 	ZombiePawn->waitingSp = true;
-	// 플레이어 주변에 있는지 확인
+
+	// 플레이어 주변에 있으면 바로 공격하고 이번 턴 행동 종료
 	if(IsPlayerNearby())
 	{
+		AttackPlayer();
 		return;
 	}
 	// 플레이어 위치와 좀비 위치 가져오기
@@ -266,11 +276,18 @@ void AZombieAIController::FindAlternativeLocation(bool xy)
 	// 3. 둘 다 실패 시 (선택적)
 	// (예: 다른 행동을 하거나, 현재 위치를 유지하거나, 더 작은 폭으로 다시 시도 등)
 	// 예시: 현재 위치 유지
-	TargetLocation = ZombiePawn->GetActorLocation(); 
+	TargetLocation = ZombiePawn->GetActorLocation();
 
+	// 이동할 곳이 전혀 없는 경우에도 이번 턴 행동은 끝난 것으로 처리해야
+	// 다른 좀비들이 모두 행동을 마쳤을 때 플레이어 턴으로 정상 복귀한다.
+	if (GameMode)
+	{
+		GameMode->NotifyZombieActed();
+	}
 }
 bool AZombieAIController::IsPlayerNearby()
 {
+	// 순수 확인 함수: 플레이어가 공격 범위 내에 있는지만 판단하고, 부작용은 없다.
 	if (!ZombiePawn || !PlayerPawn) return false;
 
 	FVector ZombieLoc = ZombiePawn->GetActorLocation();
@@ -278,41 +295,39 @@ bool AZombieAIController::IsPlayerNearby()
 
 	// 공격 범위 설정 (원하는 값으로 조절)
 	float AttackRange = 125.0f;
-	//UE_LOG(LogTemp, Warning, TEXT("PlayerLoc - ZombieLoc,%f"),(PlayerLoc - ZombieLoc).Size());
-	
-	
-	// 플레이어가 공격 범위 내에 있으면 공격
-	if ((PlayerLoc - ZombieLoc).Size() <= AttackRange)
-	{
-		FRotator CurrentRotation = ZombiePawn->GetActorRotation();
-		FRotator TargetRotation = (PlayerLoc - ZombieLoc).Rotation();
-		// Z값(높이)을 같게 맞춰서 수평 회전만 하도록
-		PlayerLoc.Z = ZombieLoc.Z;
 
-		FRotator LookAtRotation = (PlayerLoc - ZombieLoc).Rotation();
-		ZombiePawn->SetActorRotation(FRotator(0.f, LookAtRotation.Yaw, 0.f));
-		AttackPlayer();
-		return true; // 공격 후 true 반환 (추가 이동 방지)
-	}
-	else
-	{
-		GameMode->EndMonsterTurn();
-		return false; // 공격 범위 내에 없으면 false 반환
-	}
-	
+	return (PlayerLoc - ZombieLoc).Size() <= AttackRange;
 }
 void AZombieAIController::CheckAndAttackPlayer()
 {
-	IsPlayerNearby();
+	// 이동 후 플레이어가 범위 내에 있으면 공격, 아니면 이번 턴 행동 종료 처리
+	if (IsPlayerNearby())
+	{
+		AttackPlayer();
+	}
+	else if (GameMode)
+	{
+		GameMode->NotifyZombieActed();
+	}
 }
 void AZombieAIController::AttackPlayer()
 {
 	if (!ZombiePawn || !PlayerPawn) return;
 	if(ZombiePawn->Health>0)
 	{
+		FVector ZombieLoc = ZombiePawn->GetActorLocation();
+		FVector PlayerLoc = PlayerPawn->GetActorLocation();
+		// Z값(높이)을 같게 맞춰서 수평 회전만 하도록
+		PlayerLoc.Z = ZombieLoc.Z;
+		FRotator LookAtRotation = (PlayerLoc - ZombieLoc).Rotation();
+		ZombiePawn->SetActorRotation(FRotator(0.f, LookAtRotation.Yaw, 0.f));
+
 		ZombieAnim = Cast<Uzombie_Anim>(ZombiePawn->GetMesh()->GetAnimInstance());
 		ZombieAnim->Anim_attack=true;
 		PlayerPawn->Playerhit(20,ZombiePawn->GetActorLocation());
-		GameMode->EndMonsterTurn();
+	}
+	if (GameMode)
+	{
+		GameMode->NotifyZombieActed();
 	}
 }

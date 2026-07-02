@@ -60,6 +60,10 @@ void AMyGameModeBase::StartMonsterTurn()
 		Player->DisablePlayerInput();  // 몬스터 턴에는 플레이어의 입력 비활성화
 	}
 
+	// 이번 턴에 행동할 좀비 수를 세고, 완료 카운트를 초기화
+	ZombiesToActThisTurn = 0;
+	ZombiesActedThisTurn = 0;
+
 	// 몬스터가 이동하도록 처리
 	for (TActorIterator<AZombieCharacter> It(GetWorld()); It; ++It)
 	{
@@ -69,6 +73,8 @@ void AMyGameModeBase::StartMonsterTurn()
 			AZombieAIController* AIController = Cast<AZombieAIController>(Zombie->GetController());
 			if (AIController)
 			{
+				ZombiesToActThisTurn++;
+
 				// 각 좀비마다 다른 딜레이를 가진 타이머 설정
 				float Delay = FMath::RandRange(0.0f, 1.0f); // 0초에서 1초 사이의 랜덤 딜레이
 
@@ -76,13 +82,27 @@ void AMyGameModeBase::StartMonsterTurn()
 				GetWorldTimerManager().SetTimer(Zombie->MoveTimerHandle, [AIController]() {
 					AIController->MoveTowardsPlayer(); // MoveTowardsPlayer() 호출
 				}, Delay, false);
-				
+
 			}
 		}
 	}
 
-	// 몬스터 턴이 끝났으면 1초 후에 플레이어 턴으로 돌아감
-	//GetWorld()->GetTimerManager().SetTimer(MonsterTurnTimerHandle, this, &AMyGameModeBase::EndMonsterTurn, 5.0f, false);
+	// 행동할 좀비가 없으면(전멸 등) 곧바로 플레이어 턴으로 복귀
+	if (ZombiesToActThisTurn == 0)
+	{
+		EndMonsterTurn();
+	}
+}
+
+void AMyGameModeBase::NotifyZombieActed()
+{
+	// 좀비 한 마리가 이번 턴 행동(공격/이동/이동 실패)을 마쳤을 때 호출됨.
+	// 모든 좀비가 행동을 마쳐야만 플레이어 턴으로 넘어간다.
+	ZombiesActedThisTurn++;
+	if (ZombiesActedThisTurn >= ZombiesToActThisTurn)
+	{
+		EndMonsterTurn();
+	}
 }
 
 void AMyGameModeBase::EndMonsterTurn()
@@ -90,7 +110,7 @@ void AMyGameModeBase::EndMonsterTurn()
 	// 몬스터 턴 종료 후, 다시 플레이어 턴으로 넘어가게 처리
 	// 1초 후에 턴으로 돌아감
 	GetWorld()->GetTimerManager().SetTimer(PlayerTurnTimerHandle, this, &AMyGameModeBase::StartPlayerTurn, 1.0f, false);
-	
+
 }
 void AMyGameModeBase::SpawnMonsters(int32 MonsterCount)
 {
