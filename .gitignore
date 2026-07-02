@@ -1,0 +1,51 @@
+# Visual Studio / Rider / Xcode user files
+.vs/
+.idea/
+*.xcodeproj
+*.xcworkspace
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# macOS
+.DS_Store
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.gch
+*.pch
+*.so
+*.dylib
+*.dll
+*.mod
+*.lai
+*.la
+*.a
+*.lib
+*.exe
+*.out
+*.app
+*.ipa
+
+# Unreal Engine generated/derived folders (not needed to build from Source)
+Binaries/*
+Intermediate/*
+Saved/*
+DerivedDataCache/*
+Plugins/*/Binaries/*
+Plugins/*/Intermediate/*
+Build/*
+!Build/*/
+Build/*/**
+!Build/*/PakBlacklist*.txt
+!Build/**/*.ico
+
+# Content is intentionally excluded from this portfolio repo (large/marketplace assets).
+# Full project with Content lives in the private backup repo.
+Content/*_BuiltData.uasset
