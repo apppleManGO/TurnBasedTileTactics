@@ -18,17 +18,9 @@ void UEnd_UserWidget::NativeConstruct()
 
 	if (end)
 	{
-		RestartButton->OnClicked.AddDynamic(this, &UEnd_UserWidget::OnQuitClicked);
+		end->OnClicked.AddDynamic(this, &UEnd_UserWidget::OnQuitClicked);
 	}
 }
-
-// void UEnd_UserWidget::SetTurnText(int TurnCount)
-// {
-// 	if (TurnText)
-// 	{
-// 		TurnText->SetText(FText::FromString(FString::Printf(TEXT("%d턴 생존 성공!"), TurnCount)));
-// 	}
-// }
 
 void UEnd_UserWidget::OnRestartClicked()
 {
