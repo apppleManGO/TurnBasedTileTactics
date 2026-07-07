@@ -130,7 +130,7 @@ void AZombieAIController::MoveTowardsPlayer()
 		{
 			NewLocation.X += (DeltaX > 0) ? 100.0f : -100.0f;
 			// 이동 가능 여부 확인
-			if (!CheckCanMove(NewLocation))
+			if (!IsLocationBlocked(NewLocation))
 			{
 				TargetLocation = NewLocation;
 				// **좀비가 이동 방향을 바라보도록 회전 추가**
@@ -149,7 +149,7 @@ void AZombieAIController::MoveTowardsPlayer()
 		{
 			NewLocation.Y += (DeltaY > 0) ? 100.0f : -100.0f;
 			// 이동 가능 여부 확인
-			if (!CheckCanMove(NewLocation))
+			if (!IsLocationBlocked(NewLocation))
 			{
 				TargetLocation = NewLocation;
 				// **좀비가 이동 방향을 바라보도록 회전 추가**
@@ -170,7 +170,7 @@ void AZombieAIController::MoveTowardsPlayer()
 	{
 		NewLocation.X += (DeltaX > 0) ? 100.0f : -100.0f;
 		// 이동 가능 여부 확인
-        	if (!CheckCanMove(NewLocation))
+        	if (!IsLocationBlocked(NewLocation))
         	{
         		TargetLocation = NewLocation;
         		// **좀비가 이동 방향을 바라보도록 회전 추가**
@@ -190,7 +190,7 @@ void AZombieAIController::MoveTowardsPlayer()
 	{
 		NewLocation.Y += (DeltaY > 0) ? 100.0f : -100.0f;
 		// 이동 가능 여부 확인
-		if (!CheckCanMove(NewLocation))
+		if (!IsLocationBlocked(NewLocation))
 		{
 			TargetLocation = NewLocation;
 			// **좀비가 이동 방향을 바라보도록 회전 추가**
@@ -210,7 +210,7 @@ void AZombieAIController::MoveTowardsPlayer()
 	
 }
 
-bool AZombieAIController::CheckCanMove(FVector Location)
+bool AZombieAIController::IsLocationBlocked(FVector Location)
 {
 	TArray<AActor*> OutActors;
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
@@ -243,7 +243,7 @@ void AZombieAIController::FindAlternativeLocation(bool xy)
 		// 1. Y축 이동 시도
 		ZombieLoc.Y += FMath::RandBool() ? 100.0f : -100.0f;
 
-		if (!CheckCanMove(ZombieLoc))
+		if (!IsLocationBlocked(ZombieLoc))
 		{
 			TargetLocation = ZombieLoc;
 			// **좀비가 이동 방향을 바라보도록 회전 추가**
@@ -261,7 +261,7 @@ void AZombieAIController::FindAlternativeLocation(bool xy)
 		ZombieLoc = ZombiePawn->GetActorLocation(); // 원래 위치로 초기화
 		ZombieLoc.X += FMath::RandBool() ? 100.0f : -100.0f;
 
-		if (!CheckCanMove(ZombieLoc))
+		if (!IsLocationBlocked(ZombieLoc))
 		{
 			TargetLocation = ZombieLoc;
 			//1초뒤에 IsPlayerNearby 함수를 실행

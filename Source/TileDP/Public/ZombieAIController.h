@@ -23,7 +23,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	void MoveTowardsPlayer();
-	bool CheckCanMove(FVector Location);
+	bool IsLocationBlocked(FVector Location);
 	void FindAlternativeLocation(bool xy);
 	bool IsPlayerNearby();
 	void CheckAndAttackPlayer();
