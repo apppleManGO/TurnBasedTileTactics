@@ -38,7 +38,7 @@ public:
 	void NotifyZombieActed();
 	UFUNCTION(BlueprintCallable)
 	void SpawnMonsters(int32 MonsterCount);//몬스터 스폰하기
-	FVector GetRandomSpawnLocation(float MinX, float MaxX, float MinY, float MaxY, bool bFixedX);
+	bool GetRandomSpawnLocation(float MinX, float MaxX, float MinY, float MaxY, FVector& OutLocation);
 	void SpawnMonsterAtLocation(UWorld* World, FVector SpawnLocation);
 	void OnZombieDied();
 	void HandleGameOver();

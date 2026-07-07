@@ -120,16 +120,17 @@ void AMyGameModeBase::SpawnMonsters(int32 MonsterCount)
 	UWorld* World = GetWorld();
 	if (!World) return;
 
-	int32 CountPerZone = MonsterCount / 4; // 4개 구역에 몬스터를 균등하게 분배
+	int32 CountPerZone = MonsterCount / 4; // 4개 구역에 균등 분배. 정수 나눗셈으로 나머지는 버림(의도됨) — 예: 10 요청 시 실제 8마리 스폰
 
 	// 1번 구역 (오른쪽)
 	for (int32 i = 0; i < CountPerZone; i++)
 	{
 		FVector SpawnLocation;
-		do
+		if (!GetRandomSpawnLocation(Sp_X, Sp_X + 100, -Sp_Y, Sp_Y, SpawnLocation))
 		{
-			SpawnLocation = GetRandomSpawnLocation(Sp_X, Sp_X + 100, -Sp_Y, Sp_Y, true);
-		} while (SpawnedLocations.Contains(SpawnLocation));
+			UE_LOG(LogTemp, Warning, TEXT("SpawnMonsters: 1번 구역에 더 이상 스폰할 자리가 없어 %d마리를 건너뜁니다."), CountPerZone - i);
+			break;
+		}
 
 		SpawnMonsterAtLocation(World, SpawnLocation);
 	}
@@ -138,10 +139,11 @@ void AMyGameModeBase::SpawnMonsters(int32 MonsterCount)
 	for (int32 i = 0; i < CountPerZone; i++)
 	{
 		FVector SpawnLocation;
-		do
+		if (!GetRandomSpawnLocation(-Sp_X, Sp_X, Sp_Y, Sp_Y + 100, SpawnLocation))
 		{
-			SpawnLocation = GetRandomSpawnLocation(-Sp_X, Sp_X, Sp_Y, Sp_Y + 100, false);
-		} while (SpawnedLocations.Contains(SpawnLocation));
+			UE_LOG(LogTemp, Warning, TEXT("SpawnMonsters: 2번 구역에 더 이상 스폰할 자리가 없어 %d마리를 건너뜁니다."), CountPerZone - i);
+			break;
+		}
 
 		SpawnMonsterAtLocation(World, SpawnLocation);
 	}
@@ -150,10 +152,11 @@ void AMyGameModeBase::SpawnMonsters(int32 MonsterCount)
 	for (int32 i = 0; i < CountPerZone; i++)
 	{
 		FVector SpawnLocation;
-		do
+		if (!GetRandomSpawnLocation(-Sp_X - 100, -Sp_X, -Sp_Y, Sp_Y, SpawnLocation))
 		{
-			SpawnLocation = GetRandomSpawnLocation(-Sp_X - 100, -Sp_X, -Sp_Y, Sp_Y, true);
-		} while (SpawnedLocations.Contains(SpawnLocation));
+			UE_LOG(LogTemp, Warning, TEXT("SpawnMonsters: 3번 구역에 더 이상 스폰할 자리가 없어 %d마리를 건너뜁니다."), CountPerZone - i);
+			break;
+		}
 
 		SpawnMonsterAtLocation(World, SpawnLocation);
 	}
@@ -162,15 +165,16 @@ void AMyGameModeBase::SpawnMonsters(int32 MonsterCount)
 	for (int32 i = 0; i < CountPerZone; i++)
 	{
 		FVector SpawnLocation;
-		do
+		if (!GetRandomSpawnLocation(-Sp_X, Sp_X, -Sp_Y - 100, -Sp_Y, SpawnLocation))
 		{
-			SpawnLocation = GetRandomSpawnLocation(-Sp_X, Sp_X, -Sp_Y - 100, -Sp_Y, false);
-		} while (SpawnedLocations.Contains(SpawnLocation));
+			UE_LOG(LogTemp, Warning, TEXT("SpawnMonsters: 4번 구역에 더 이상 스폰할 자리가 없어 %d마리를 건너뜁니다."), CountPerZone - i);
+			break;
+		}
 
 		SpawnMonsterAtLocation(World, SpawnLocation);
 	}
 }
-FVector AMyGameModeBase::GetRandomSpawnLocation(float MinX, float MaxX, float MinY, float MaxY, bool bFixedX)
+bool AMyGameModeBase::GetRandomSpawnLocation(float MinX, float MaxX, float MinY, float MaxY, FVector& OutLocation)
 {
     TArray<FVector> PossibleValues;
 
@@ -179,22 +183,23 @@ FVector AMyGameModeBase::GetRandomSpawnLocation(float MinX, float MaxX, float Mi
         for (float Y = MinY; Y <= MaxY; Y += 100.0f)
         {
             FVector Location(X, Y, 88.0f);
-            
+
                 if (!SpawnedLocations.Contains(Location))
                 {
                     PossibleValues.Add(Location);
                 }
-           
+
         }
     }
 
     if (PossibleValues.Num() == 0)
     {
-        return FVector(bFixedX ? 850.0f : 50.0f, bFixedX ? 50.0f : 850.0f, 88.0f); // 각 구역의 기본 위치 반환
+        return false; // 이 구역엔 더 이상 놓을 자리가 없음
     }
 
     int32 RandomIndex = FMath::RandRange(0, PossibleValues.Num() - 1);
-    return PossibleValues[RandomIndex];
+    OutLocation = PossibleValues[RandomIndex];
+    return true;
 }
 void AMyGameModeBase::SpawnMonsterAtLocation(UWorld* World, FVector SpawnLocation)
 {
